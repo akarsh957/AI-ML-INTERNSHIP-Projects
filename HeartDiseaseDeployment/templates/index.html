@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heart Disease Risk Assessment Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary-glow: radial-gradient(circle at 50% 50%, rgba(99, 102, 241, 0.15), transparent 60%);
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --danger-color: #f43f5e;
+            --success-color: #10b981;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 40px 20px;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: var(--primary-glow);
+            top: -200px;
+            left: -200px;
+            z-index: -1;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        body::after {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle at 50% 50%, rgba(244, 63, 94, 0.08), transparent 60%);
+            bottom: -200px;
+            right: -200px;
+            z-index: -1;
+            filter: blur(80px);
+            pointer-events: none;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #f43f5e 0%, #6366f1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .alert-bar {
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            padding: 12px 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .alert-text {
+            font-size: 0.95rem;
+            color: #a5b4fc;
+        }
+
+        .load-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--text-primary);
+            padding: 6px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .load-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        form {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 768px) {
+            form {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group.full-width {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 768px) {
+            .form-group.full-width {
+                grid-column: span 1;
+            }
+        }
+
+        label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-family: inherit;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .action-container {
+            grid-column: span 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .action-container {
+                grid-column: span 1;
+            }
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, var(--accent-color) 0%, #4f46e5 100%);
+            border: none;
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 16px 40px;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow: 0 10px 20px -10px rgba(99, 102, 241, 0.5);
+            transition: all 0.3s ease;
+            width: 100%;
+            max-width: 300px;
+            text-align: center;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -10px rgba(99, 102, 241, 0.7);
+            background: linear-gradient(135deg, #7c3aed 0%, var(--accent-color) 100%);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 18px;
+            padding: 24px;
+            width: 100%;
+            display: none;
+            text-align: center;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-title {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .result-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+        }
+
+        .result-value.positive {
+            color: var(--danger-color);
+            text-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
+        }
+
+        .result-value.negative {
+            color: var(--success-color);
+            text-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .result-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 0.85rem;
+            color: #475569;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Heart Disease Risk Evaluator</h1>
+            <p>End-to-End ML Model Deployment - Assignment 10</p>
+        </header>
+
+        <div class="alert-bar">
+            <div class="alert-text">💡 <strong>Quick Test:</strong> Click the button to autofill features that test positive/negative.</div>
+            <div>
+                <button type="button" class="load-btn" onclick="autofill(1)">Load Positive Case</button>
+                <button type="button" class="load-btn" onclick="autofill(0)">Load Negative Case</button>
+            </div>
+        </div>
+
+        <form id="prediction-form" onsubmit="makePrediction(event)">
+            <!-- 1. Age -->
+            <div class="form-group">
+                <label for="age">Age (years)</label>
+                <input type="number" id="age" name="age" required min="1" max="120" value="58">
+            </div>
+
+            <!-- 2. Sex -->
+            <div class="form-group">
+                <label for="sex">Sex</label>
+                <select id="sex" name="sex" required>
+                    <option value="1">Male</option>
+                    <option value="0">Female</option>
+                </select>
+            </div>
+
+            <!-- 3. Chest Pain Type (cp) -->
+            <div class="form-group">
+                <label for="cp">Chest Pain Type</label>
+                <select id="cp" name="cp" required>
+                    <option value="0">Typical Angina (0)</option>
+                    <option value="1">Atypical Angina (1)</option>
+                    <option value="2">Non-Anginal Pain (2)</option>
+                    <option value="3">Asymptomatic (3)</option>
+                </select>
+            </div>
+
+            <!-- 4. Resting Blood Pressure (trestbps) -->
+            <div class="form-group">
+                <label for="trestbps">Resting BP (mmHg)</label>
+                <input type="number" id="trestbps" name="trestbps" required min="50" max="250" value="130">
+            </div>
+
+            <!-- 5. Serum Cholesterol (chol) -->
+            <div class="form-group">
+                <label for="chol">Serum Cholesterol (mg/dl)</label>
+                <input type="number" id="chol" name="chol" required min="100" max="600" value="250">
+            </div>
+
+            <!-- 6. Fasting Blood Sugar (fbs) -->
+            <div class="form-group">
+                <label for="fbs">Fasting Blood Sugar > 120 mg/dl</label>
+                <select id="fbs" name="fbs" required>
+                    <option value="0">False (0)</option>
+                    <option value="1">True (1)</option>
+                </select>
+            </div>
+
+            <!-- 7. Resting ECG (restecg) -->
+            <div class="form-group">
+                <label for="restecg">Resting ECG Results</label>
+                <select id="restecg" name="restecg" required>
+                    <option value="0">Normal (0)</option>
+                    <option value="1">ST-T Wave Abnormality (1)</option>
+                    <option value="2">Left Ventricular Hypertrophy (2)</option>
+                </select>
+            </div>
+
+            <!-- 8. Max Heart Rate Achieved (thalach) -->
+            <div class="form-group">
+                <label for="thalach">Max Heart Rate Achieved</label>
+                <input type="number" id="thalach" name="thalach" required min="60" max="220" value="150">
+            </div>
+
+            <!-- 9. Exercise Induced Angina (exang) -->
+            <div class="form-group">
+                <label for="exang">Exercise Induced Angina</label>
+                <select id="exang" name="exang" required>
+                    <option value="0">No (0)</option>
+                    <option value="1">Yes (1)</option>
+                </select>
+            </div>
+
+            <!-- 10. ST Depression (oldpeak) -->
+            <div class="form-group">
+                <label for="oldpeak">ST Depression (oldpeak)</label>
+                <input type="number" id="oldpeak" name="oldpeak" step="0.1" required min="0" max="10" value="1.0">
+            </div>
+
+            <!-- 11. Slope of Peak ST Segment (slope) -->
+            <div class="form-group">
+                <label for="slope">Slope of Peak Exercise ST</label>
+                <select id="slope" name="slope" required>
+                    <option value="0">Upsloping (0)</option>
+                    <option value="1">Flat (1)</option>
+                    <option value="2">Downsloping (2)</option>
+                </select>
+            </div>
+
+            <!-- 12. Colored Vessels (ca) -->
+            <div class="form-group">
+                <label for="ca">Vessels Colored by Fluoroscopy</label>
+                <select id="ca" name="ca" required>
+                    <option value="0">0 major vessels</option>
+                    <option value="1">1 major vessel</option>
+                    <option value="2">2 major vessels</option>
+                    <option value="3">3 major vessels</option>
+                </select>
+            </div>
+
+            <!-- 13. Thalassemia (thal) -->
+            <div class="form-group">
+                <label for="thal">Thalassemia Type</label>
+                <select id="thal" name="thal" required>
+                    <option value="1">Normal (1)</option>
+                    <option value="2">Fixed Defect (2)</option>
+                    <option value="3">Reversible Defect (3)</option>
+                </select>
+            </div>
+
+            <!-- Submit Button & Result -->
+            <div class="action-container">
+                <button type="submit" class="submit-btn">Run Risk Prediction</button>
+                
+                <div class="result-card" id="result-card">
+                    <div class="result-title">Prediction Result</div>
+                    <div class="result-value" id="result-value">--</div>
+                    <div class="result-desc" id="result-desc">--</div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="footer">
+        Powered by Flask REST API &amp; Random Forest Classifier. Running on Render Cloud Services.
+    </div>
+
+    <script>
+        const samples = {
+            // Patient details that predict positive (Heart Disease Detected)
+            // Example high risk: high chest pain score (typical/atypical), lower max heart rate, higher oldpeak, older age, vessels colored
+            1: {
+                age: 58, sex: 1, cp: 0, trestbps: 150, chol: 270, fbs: 1, 
+                restecg: 0, thalach: 111, exang: 1, oldpeak: 3.0, slope: 1, ca: 0, thal: 3
+            },
+            // Patient details that predict negative (No Heart Disease)
+            0: {
+                age: 54, sex: 0, cp: 2, trestbps: 135, chol: 214, fbs: 0, 
+                restecg: 1, thalach: 158, exang: 0, oldpeak: 1.6, slope: 1, ca: 0, thal: 2
+            }
+        };
+
+        function autofill(type) {
+            const data = samples[type];
+            for (const key in data) {
+                const element = document.getElementById(key);
+                if (element) {
+                    element.value = data[key];
+                }
+            }
+        }
+
+        async function makePrediction(event) {
+            event.preventDefault();
+            const form = document.getElementById('prediction-form');
+            const resultCard = document.getElementById('result-card');
+            const resultValue = document.getElementById('result-value');
+            const resultDesc = document.getElementById('result-desc');
+
+            const payload = {};
+            const formData = new FormData(form);
+            formData.forEach((value, key) => {
+                payload[key] = parseFloat(value);
+            });
+
+            try {
+                resultCard.style.display = 'block';
+                resultValue.className = 'result-value';
+                resultValue.textContent = 'Analyzing...';
+                resultDesc.textContent = '';
+
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Server returned status ${response.status}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.prediction === "Heart Disease Detected") {
+                    resultValue.textContent = result.prediction;
+                    resultValue.className = 'result-value positive';
+                    resultDesc.textContent = 'High Risk. The clinical parameters strongly align with positive indicators for cardiovascular disease. Please consult a doctor immediately.';
+                } else if (result.prediction === "No Heart Disease Detected") {
+                    resultValue.textContent = result.prediction;
+                    resultValue.className = 'result-value negative';
+                    resultDesc.textContent = 'Low Risk. The model predicts no immediate signs of heart disease based on the provided clinical parameters. Continue maintaining a healthy lifestyle!';
+                } else {
+                    resultValue.textContent = 'Error';
+                    resultDesc.textContent = result.error || 'Unexpected prediction output format.';
+                }
+            } catch (error) {
+                resultValue.textContent = 'Connection Error';
+                resultValue.className = 'result-value';
+                resultDesc.textContent = `Could not connect to Flask backend: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
